@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...db.db import get_session
-from ...schemas import links as link_schema
-from ...services.link import activity_crud, link_crud
+from db.db import get_session
+from services.link import activity_crud, link_crud
+from schemas import links as link_schema
 from .utils import get_db_obj
 
 router = APIRouter()
@@ -16,7 +16,7 @@ router = APIRouter()
 async def get_acivity(
     id: int,
     db: AsyncSession = Depends(get_session),
-    full: Optional[str] = Query(None, alias='full-info'),
+    full: bool = Query(False, alias='full-info'),
     skip: int = Query(0, alias='offset'),
     limit: int = Query(100, alias='max-result')
 ) -> dict[str, Any]:
@@ -25,7 +25,7 @@ async def get_acivity(
     answer: dict[
         str, Union[int, Optional[list[link_schema.ClientActivity]]]
     ] = {'id': id, 'amount': amount}
-    if full == 'full-info':
+    if full:
         results = await activity_crud.get_full(
             db=db, id=id, skip=skip, limit=limit)
         activity = []
@@ -42,19 +42,23 @@ async def get_acivity(
 async def get_link(
     request: Request,
     id: int,
-    db: AsyncSession = Depends(get_session),
+    db_get: AsyncSession = Depends(get_session),
+    db_activity: AsyncSession = Depends(get_session)
 ) -> Any:
-    answer = await get_db_obj(db=db, id=id)
+    answer = await get_db_obj(db=db_get, id=id)
     if answer.is_deleted:
         return Response(status_code=status.HTTP_410_GONE)
     if request.client:
         client_adress = f'{request.client.host}:{request.client.port}'
-        await activity_crud.add(id=id, client=client_adress, db=db)
+        await activity_crud.add(id=id, client=client_adress, db=db_activity)
     return answer.long_link
 
 
 @router.delete("/{id}")
-async def delete_link(id: int, db: AsyncSession = Depends(get_session)):
+async def delete_link(
+    id: int,
+    db: AsyncSession = Depends(get_session)
+) -> Response:
     answer = await get_db_obj(db=db, id=id)
     if answer.is_deleted:
         return Response(status_code=status.HTTP_410_GONE)

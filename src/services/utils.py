@@ -1,6 +1,6 @@
 from secrets import choice
 
-from ..utils.settings import ALPHABET
+from utils.settings import ALPHABET
 
 
 def get_short_link(length: int) -> str:

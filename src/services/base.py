@@ -7,8 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import func
 
-from ..db.db import Base
-from ..utils.settings import LINK_LENGTH
+from db.db import Base
+from utils.settings import LINK_LENGTH
 from .utils import get_short_link
 
 

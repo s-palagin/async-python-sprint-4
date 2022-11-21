@@ -1,6 +1,6 @@
-from ..models.links import Links as LinksModel
-from ..models.links import LinksActivity
-from ..schemas.links import Activity, LongLink
+from models.links import Links as LinksModel
+from models.links import LinksActivity
+from schemas.links import Activity, LongLink
 from .base import RepositoryDBActivity, RepositoryDBLink
 
 

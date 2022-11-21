@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 
 # from datetime import datetime
 # Импортируем базовый класс для моделей.
-from ..db.db import Base
+from db.db import Base
 
 
 class Links(Base):

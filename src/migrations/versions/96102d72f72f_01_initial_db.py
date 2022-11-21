@@ -1,16 +1,17 @@
 """01_initial-db
 
-Revision ID: b4b68812d8ac
-Revises: 149d6f3209ad
-Create Date: 2022-11-17 21:11:23.498833
+Revision ID: 96102d72f72f
+Revises: 
+Create Date: 2022-11-19 15:36:30.303724
 
 """
-import sqlalchemy as sa
 from alembic import op
+import sqlalchemy as sa
+
 
 # revision identifiers, used by Alembic.
-revision = 'b4b68812d8ac'
-down_revision = '149d6f3209ad'
+revision = '96102d72f72f'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -21,13 +22,13 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('long_link', sa.String(length=2083), nullable=False),
     sa.Column('short_link', sa.String(length=8), nullable=False),
+    sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('links_activity',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('activity', sa.DateTime(), nullable=True),
     sa.Column('client', sa.String(length=20), nullable=False),
-    sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('link_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['link_id'], ['links.id'], ),
     sa.PrimaryKeyConstraint('id')
