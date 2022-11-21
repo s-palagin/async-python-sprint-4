@@ -5,7 +5,7 @@ from fastapi.responses import ORJSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.v1 import links
-from core.config import app_settings
+from core.config import app_settings, PROJECT_HOST, PROJECT_PORT
 from middleware.middleware import BlackListMiddleware
 from utils.settings import BLACK_LIST
 
@@ -26,4 +26,6 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=blm)
 if __name__ == '__main__':
     uvicorn.run(
         'main:app',
+        host=PROJECT_HOST,
+        port=PROJECT_PORT,
     )
