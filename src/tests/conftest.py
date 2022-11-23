@@ -3,7 +3,7 @@ import asyncpg
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from typing import Generator
+from typing import AsyncGenerator, Generator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -22,7 +22,7 @@ def event_loop(request) -> Generator:  # noqa: indirect usage
 
 
 @pytest_asyncio.fixture(scope='function')
-async def client() -> Generator:
+async def client() -> AsyncGenerator:
     async with AsyncClient(
         app=app,
         follow_redirects=False,
@@ -32,7 +32,7 @@ async def client() -> Generator:
 
 
 @pytest_asyncio.fixture(scope="module")
-async def async_session() -> AsyncSession:
+async def async_session() -> AsyncGenerator:
     async def connect_create_if_not_exists(user, database, password):
         try:
             conn = await asyncpg.connect(

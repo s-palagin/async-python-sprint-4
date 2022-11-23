@@ -3,5 +3,5 @@ TEST_LINKS = [
     f'http://test_{i}_test.py' for i in range(TESTS_COUNT)
 ]
 
-TEST_LINKS_ID = {}
+TEST_LINKS_ID: dict = {}
 BASE_URL = 'http://localhost'

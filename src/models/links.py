@@ -1,9 +1,10 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base, relationship
 
-Base = declarative_base()
+Base: Any = declarative_base()
 
 
 class Links(Base):
@@ -12,7 +13,7 @@ class Links(Base):
     long_link = Column(String(2083), nullable=False)
     short_link = Column(String(8), nullable=False)
     is_deleted = Column(Boolean, nullable=False, default=False)
-    activity = relationship('LinksActivity')
+    activity: relationship = relationship('LinksActivity')
 
 
 class LinksActivity(Base):
