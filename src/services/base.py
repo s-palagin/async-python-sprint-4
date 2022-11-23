@@ -1,14 +1,16 @@
 from datetime import datetime
 from typing import Any, Generic, Type, TypeVar
+from fastapi import HTTPException, status
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, exc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import func
 
-from db.db import Base
-from utils.settings import LINK_LENGTH
+from models.links import Base
+from schemas import links as schema
+from core.config import LINK_LENGTH
 from .utils import get_short_link
 
 
@@ -29,14 +31,20 @@ class RepositoryDBActivity(Repository, Generic[ModelType, CreateSchemaType]):
         self._acttivity_model = activity_model
 
     async def add(self, id: int, client: str, db: AsyncSession) -> None:
-        new_activity = {
-            'activity': datetime.now(),
-            'client': client,
-            'link_id': id
-        }
-        db_obj = self._acttivity_model(**new_activity)
-        db.add(db_obj)
-        await db.commit()
+        new_activity = schema.Activity(
+            activity=datetime.now(),
+            client=client,
+            link_id=id
+        )
+        db_obj = self._acttivity_model(**new_activity.dict())
+        try:
+            db.add(db_obj)
+            await db.commit()
+        except exc.SQLAlchemyError as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=error
+            )
 
     async def get_full(
         self, db: AsyncSession, id: int, skip: int = 0, limit: int = 100
@@ -68,8 +76,14 @@ class RepositoryDBLink(Repository, Generic[ModelType, CreateSchemaType]):
         for data in obj_in_data:
             data['short_link'] = get_short_link(LINK_LENGTH)
             db_obj = self._links_model(**data)
-            db.add(db_obj)
-            await db.commit()
+            try:
+                db.add(db_obj)
+                await db.commit()
+            except exc.SQLAlchemyError as error:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=error
+                )
             await db.refresh(db_obj)
             answer.append(db_obj)
         return answer

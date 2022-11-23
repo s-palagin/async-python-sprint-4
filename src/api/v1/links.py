@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -12,19 +12,21 @@ from .utils import get_db_obj
 router = APIRouter()
 
 
-@router.get("/{id}/status")
+@router.get(
+    "/{id}/status",
+    response_model=link_schema.LinkStatus,
+    response_model_exclude_unset=True
+)
 async def get_acivity(
     id: int,
     db: AsyncSession = Depends(get_session),
     full: bool = Query(False, alias='full-info'),
     skip: int = Query(0, alias='offset'),
     limit: int = Query(100, alias='max-result')
-) -> dict[str, Any]:
-    await get_db_obj(db=db, id=id)
+) -> link_schema.LinkStatus:
+    await get_db_obj(db=db, crud=link_crud, id=id)
     amount = await activity_crud.get(db=db, id=id)
-    answer: dict[
-        str, Union[int, Optional[list[link_schema.ClientActivity]]]
-    ] = {'id': id, 'amount': amount}
+    answer = link_schema.LinkStatus(id=id, amount=amount)
     if full:
         results = await activity_crud.get_full(
             db=db, id=id, skip=skip, limit=limit)
@@ -34,7 +36,7 @@ async def get_acivity(
                 client=result.client,
                 date=result.activity
             ))
-        answer.update({'activity': activity})
+        answer.activity = activity
     return answer
 
 
@@ -42,15 +44,14 @@ async def get_acivity(
 async def get_link(
     request: Request,
     id: int,
-    db_get: AsyncSession = Depends(get_session),
-    db_activity: AsyncSession = Depends(get_session)
+    db: AsyncSession = Depends(get_session),
 ) -> Any:
-    answer = await get_db_obj(db=db_get, id=id)
+    answer = await get_db_obj(db=db, crud=link_crud, id=id)
     if answer.is_deleted:
         return Response(status_code=status.HTTP_410_GONE)
     if request.client:
         client_adress = f'{request.client.host}:{request.client.port}'
-        await activity_crud.add(id=id, client=client_adress, db=db_activity)
+        await activity_crud.add(id=id, client=client_adress, db=db)
     return answer.long_link
 
 
@@ -59,7 +60,7 @@ async def delete_link(
     id: int,
     db: AsyncSession = Depends(get_session)
 ) -> Response:
-    answer = await get_db_obj(db=db, id=id)
+    answer = await get_db_obj(db=db, crud=link_crud, id=id)
     if answer.is_deleted:
         return Response(status_code=status.HTTP_410_GONE)
     await link_crud.delete(db=db, db_obj=answer)
